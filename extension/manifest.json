@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "Target SSW 475 Automação",
+  "version": "1.0",
+  "description": "Automação ultraleve de lançamento de despesas no SSW Tela 475",
+  "permissions": ["activeTab", "storage"],
+  "host_permissions": [
+    "https://sistema.ssw.inf.br/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://sistema.ssw.inf.br/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "Target SSW 475"
+  }
+}

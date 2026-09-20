@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Target SSW 475 - Automação de Despesas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-left">
+        <div class="logo-badge">SSW 475</div>
+        <div>
+          <h1>Automação de Despesas SSW</h1>
+          <p class="subtitle">Lançamento automático de despesas na Tela 475 a partir da planilha Excel</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-secondary" id="btnToggleBrowser" type="button" title="Abre ou foca a janela visível do SSW Tela 475">
+          <span class="btn-icon">👁️</span> <span id="btnBrowserText">Modo Visível (Navegador)</span>
+        </button>
+        <div class="connection-pill" id="connectionStatus">
+          <span class="status-dot online"></span>
+          <span id="connectionText">Pronto para Operar</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Stats Bar -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total de Registros</div>
+        <div class="stat-value" id="statTotal">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Pendentes</div>
+        <div class="stat-value text-warning" id="statPending">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Lançados com Sucesso</div>
+        <div class="stat-value text-success" id="statSuccess">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Erros / Alertas</div>
+        <div class="stat-value text-danger" id="statErrors">0</div>
+      </div>
+    </div>
+
+    <!-- Paste & Action Toolbar -->
+    <div class="action-card">
+      <div class="paste-area-container">
+        <div class="paste-zone" id="pasteZone" tabindex="0">
+          <div class="paste-icon">📋</div>
+          <div class="paste-text">
+            <strong>Clique aqui e pressione Ctrl + V para colar os dados copiados do Excel</strong>
+            <span>Ou copie as linhas da planilha e cole em qualquer lugar da tela</span>
+          </div>
+          <button class="btn btn-secondary" id="btnUploadExcel" type="button">📂 Carregar Arquivo Excel</button>
+          <input type="file" id="fileInput" accept=".xlsx, .xls, .csv, .txt" style="display: none;">
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <button class="btn btn-primary" id="btnStart" type="button">
+            <span class="btn-icon">▶</span> Iniciar Automação
+          </button>
+          <button class="btn btn-warning" id="btnPause" type="button" disabled>
+            <span class="btn-icon">⏸</span> Pausar
+          </button>
+          <button class="btn btn-danger" id="btnStop" type="button" disabled>
+            <span class="btn-icon">⏹</span> Parar
+          </button>
+          <button class="btn btn-ghost" id="btnClear" type="button">
+            <span class="btn-icon">🗑</span> Limpar Tabela
+          </button>
+          <button class="btn btn-ghost" id="btnLoadExample" type="button">
+            <span class="btn-icon">⚡</span> Carregar Planilha TARGET
+          </button>
+        </div>
+
+        <div class="toolbar-right">
+          <div class="speed-control">
+            <label for="speedSelect">Velocidade:</label>
+            <select id="speedSelect" class="select-input">
+              <option value="turbo">Turbo (500ms)</option>
+              <option value="normal" selected>Normal (1.0s)</option>
+              <option value="safe">Seguro (1.8s)</option>
+            </select>
+          </div>
+          <button class="btn btn-outline" id="btnExportLog" type="button">
+            <span class="btn-icon">📥</span> Exportar Log
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Grid View -->
+    <div class="table-card">
+      <div class="table-header-bar">
+        <div class="table-title">
+          <span>Registros a Processar</span>
+          <span class="badge" id="rowCounterBadge">0 linhas</span>
+        </div>
+        <div class="table-actions">
+          <span class="legend-item"><span class="badge badge-pending">Pendente</span></span>
+          <span class="legend-item"><span class="badge badge-running">Processando</span></span>
+          <span class="legend-item"><span class="badge badge-success">Concluído</span></span>
+          <span class="legend-item"><span class="badge badge-error">Erro</span></span>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="data-table" id="dataTable">
+          <thead>
+            <tr>
+              <th style="width: 40px">#</th>
+              <th style="width: 120px">Status</th>
+              <th style="width: 140px">Nº Lançamento</th>
+              <th>Unidade</th>
+              <th>Fornecedor</th>
+              <th>Evento</th>
+              <th>Série</th>
+              <th>Nº Compra</th>
+              <th>Modelo</th>
+              <th>Valor</th>
+              <th>Emissão</th>
+              <th>Entrada</th>
+              <th>Vencimento</th>
+              <th>Pagamento</th>
+              <th>Competência</th>
+              <th>Vlr Parcela</th>
+              <th>Histórico</th>
+              <th style="width: 60px">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr class="empty-row">
+              <td colspan="18">
+                <div class="empty-state">
+                  <div class="empty-state-icon">📊</div>
+                  <h3>Nenhum dado importado</h3>
+                  <p>Copie as células do Excel e aperte <strong>Ctrl + V</strong> em qualquer lugar, ou clique em "Carregar Planilha TARGET".</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Live Execution Logs -->
+    <div class="log-card">
+      <div class="log-header">
+        <div class="log-title">
+          <span class="terminal-icon">⌨</span> Terminal de Execução SSW
+        </div>
+        <button class="btn-clear-log" id="btnClearLog" type="button">Limpar Log</button>
+      </div>
+      <div class="terminal-body" id="terminalLog">
+        <div class="log-entry system">[SISTEMA] Dashboard de automação iniciado com sucesso. Aguardando dados para processamento.</div>
+        <div class="log-entry info">[CONFIG] Sequência de campos configurada para a Tela 475 do SSW (Parte 1 e Parte 2).</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

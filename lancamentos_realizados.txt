@@ -1,0 +1,5 @@
+Linha 1 | Compra 10426238 | Lancamento: FSP236457 | Valor: R$ 65,36 | Evento: 7022
+Linha 2 | Compra 10426197 | Lancamento: FSP236458 | Valor: R$ 13,20 | Evento: 7022
+Linha 3 | Compra 10426192 | Lancamento: FSP236459 | Valor: R$ 65,36 | Evento: 7022
+Linha 4 | Compra 10426189 | Lancamento: FSP236460 | Valor: R$ 30,80 | Evento: 7022
+Linha 5 | Compra 10426184 | Lancamento: FSP236461 | Valor: R$ 13,20 | Evento: 7022
