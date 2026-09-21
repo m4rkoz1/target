@@ -4,3 +4,9 @@ __pycache__/
 TargetSSW_BrowserProfile/
 *.log
 .vscode/
+credenciais_ssw.json
+debug_*.png
+diag_*.png
+automacao_log.txt
+automacao_err.txt
+login_ssw0422_raw.html
