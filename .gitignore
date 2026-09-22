@@ -10,3 +10,8 @@ diag_*.png
 automacao_log.txt
 automacao_err.txt
 login_ssw0422_raw.html
+build/
+dist/
+uploads/
+planilha_ativa.txt
+*.spec

@@ -3,172 +3,125 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Target SSW 475 - Automação de Despesas</title>
+  <title>TARGET SSW 475 — Central de Controle</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="app-container">
-    <!-- Header -->
-    <header class="header">
-      <div class="header-left">
-        <div class="logo-badge">SSW 475</div>
+  <div class="app">
+
+    <header class="topbar card">
+      <div class="brand">
+        <div class="stamp">SSW<br>475</div>
         <div>
-          <h1>Automação de Despesas SSW</h1>
-          <p class="subtitle">Lançamento automático de despesas na Tela 475 a partir da planilha Excel</p>
+          <h1>TARGET · Central de Controle</h1>
+          <p>Lançamento automático de despesas — login, planilha, execução e logs num só lugar</p>
         </div>
       </div>
-      <div class="header-right">
-        <button class="btn btn-secondary" id="btnToggleBrowser" type="button" title="Abre ou foca a janela visível do SSW Tela 475">
-          <span class="btn-icon">👁️</span> <span id="btnBrowserText">Modo Visível (Navegador)</span>
-        </button>
-        <div class="connection-pill" id="connectionStatus">
-          <span class="status-dot online"></span>
-          <span id="connectionText">Pronto para Operar</span>
-        </div>
+      <div class="top-actions">
+        <div class="status-pill" id="statusPill"><span class="dot" id="statusDot"></span><span id="statusText">Conectando…</span></div>
+        <button class="btn btn-go" id="btnStart" type="button">▶ Iniciar</button>
+        <button class="btn btn-stop" id="btnStop" type="button" disabled>■ Parar</button>
       </div>
     </header>
 
-    <!-- Stats Bar -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-label">Total de Registros</div>
-        <div class="stat-value" id="statTotal">0</div>
+    <section class="grid3">
+      <div class="card">
+        <div class="card-tag tag-pink">01 · Acesso SSW</div>
+        <h2>Login automático</h2>
+        <label>Domínio<input id="inDominio" class="field" value="GIA" maxlength="3" autocomplete="off"></label>
+        <div class="row2">
+          <label>CPF<input id="inCpf" class="field" inputmode="numeric" placeholder="só números" autocomplete="off"></label>
+          <label>Usuário<input id="inUsuario" class="field" autocomplete="off"></label>
+        </div>
+        <label>Senha<input id="inSenha" class="field" type="password" autocomplete="off"></label>
+        <label class="check"><input type="checkbox" id="inSalvarSenha"> salvar senha neste PC</label>
+        <button class="btn btn-dark w100" id="btnSalvarLogin" type="button">Salvar acesso</button>
+        <p class="hint" id="loginHint">A senha nunca volta do servidor — o campo sempre abre vazio.</p>
       </div>
-      <div class="stat-card">
-        <div class="stat-label">Pendentes</div>
-        <div class="stat-value text-warning" id="statPending">0</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Lançados com Sucesso</div>
-        <div class="stat-value text-success" id="statSuccess">0</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Erros / Alertas</div>
-        <div class="stat-value text-danger" id="statErrors">0</div>
-      </div>
-    </div>
 
-    <!-- Paste & Action Toolbar -->
-    <div class="action-card">
-      <div class="paste-area-container">
-        <div class="paste-zone" id="pasteZone" tabindex="0">
-          <div class="paste-icon">📋</div>
-          <div class="paste-text">
-            <strong>Clique aqui e pressione Ctrl + V para colar os dados copiados do Excel</strong>
-            <span>Ou copie as linhas da planilha e cole em qualquer lugar da tela</span>
-          </div>
-          <button class="btn btn-secondary" id="btnUploadExcel" type="button">📂 Carregar Arquivo Excel</button>
-          <input type="file" id="fileInput" accept=".xlsx, .xls, .csv, .txt" style="display: none;">
+      <div class="card">
+        <div class="card-tag tag-yellow">02 · Planilha</div>
+        <h2>Base TARGET</h2>
+        <div class="filebox" id="fileBox">
+          <div class="filebox-icon">▤</div>
+          <div><strong id="planilhaNome">Nenhum arquivo ativo</strong><span id="planilhaInfo">Envie o .xlsx base</span></div>
+          <button class="btn btn-blue" id="btnUpload" type="button">Enviar .xlsx</button>
+          <input type="file" id="fileInput" accept=".xlsx,.xls" hidden>
+        </div>
+        <button class="btn btn-ghost w100" id="btnRecarregar" type="button">↻ Recarregar dados</button>
+        <div class="stats">
+          <div class="stat"><span>Total</span><strong id="statTotal">0</strong></div>
+          <div class="stat"><span>Pendentes</span><strong id="statPending" class="c-blue">0</strong></div>
+          <div class="stat"><span>Lançados</span><strong id="statSuccess" class="c-green">0</strong></div>
         </div>
       </div>
 
-      <div class="toolbar">
-        <div class="toolbar-left">
-          <button class="btn btn-primary" id="btnStart" type="button">
-            <span class="btn-icon">▶</span> Iniciar Automação
-          </button>
-          <button class="btn btn-warning" id="btnPause" type="button" disabled>
-            <span class="btn-icon">⏸</span> Pausar
-          </button>
-          <button class="btn btn-danger" id="btnStop" type="button" disabled>
-            <span class="btn-icon">⏹</span> Parar
-          </button>
-          <button class="btn btn-ghost" id="btnClear" type="button">
-            <span class="btn-icon">🗑</span> Limpar Tabela
-          </button>
-          <button class="btn btn-ghost" id="btnLoadExample" type="button">
-            <span class="btn-icon">⚡</span> Carregar Planilha TARGET
-          </button>
+      <div class="card">
+        <div class="card-tag tag-green">03 · Execução</div>
+        <h2>Robô Playwright</h2>
+        <label>Modo teste (nº de linhas, 0 = tudo)<input id="inLimite" class="field" type="number" min="0" value="1"></label>
+        <label class="check"><input type="checkbox" id="inVisivel" checked> modo visível (ver o robô no navegador)</label>
+        <div class="btnrow">
+          <button class="btn btn-go w100" id="btnStart2" type="button">▶ Iniciar automação</button>
         </div>
+        <div class="btnrow">
+          <button class="btn btn-stop w100" id="btnStop2" type="button" disabled>■ Parar</button>
+          <button class="btn btn-ghost w100" id="btnExport" type="button">⤓ Exportar CSV</button>
+        </div>
+        <p class="hint">O navegador abre visível: o robô loga, vai à Tela 475 e preenche linha a linha. Use limite = 1 no primeiro teste.</p>
+        <p class="hint mono" id="execInfo">—</p>
+      </div>
+    </section>
 
-        <div class="toolbar-right">
-          <div class="speed-control">
-            <label for="speedSelect">Velocidade:</label>
-            <select id="speedSelect" class="select-input">
-              <option value="turbo">Turbo (500ms)</option>
-              <option value="normal" selected>Normal (1.0s)</option>
-              <option value="safe">Seguro (1.8s)</option>
-            </select>
-          </div>
-          <button class="btn btn-outline" id="btnExportLog" type="button">
-            <span class="btn-icon">📥</span> Exportar Log
-          </button>
+    <section class="card paste-card">
+      <div class="tablebar">
+        <h2>Colar linhas da planilha</h2>
+        <span class="badge" id="pasteBadge">0 linhas</span>
+      </div>
+      <p class="hint">No Excel, selecione as linhas (na ordem: Unidade, Fornecedor, Evento, Série, Nº Compra, Modelo, Valor, Emissão, Entrada, Vencimento, Pagamento, Competência, Vlr Parcela, Histórico), copie com <strong>Ctrl+C</strong>, clique na caixa abaixo e cole com <strong>Ctrl+V</strong>.</p>
+      <textarea id="pasteArea" class="pastearea" placeholder="Clique aqui e pressione Ctrl+V para colar as linhas copiadas do Excel…"></textarea>
+      <div class="btnrow">
+        <button class="btn btn-blue w100" id="btnUsarColagem" type="button">Usar como base do robô</button>
+        <button class="btn btn-ghost w100" id="btnLimparColagem" type="button">Limpar caixa</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="tablebar">
+        <h2>Registros <span class="badge" id="rowBadge">0 linhas</span></h2>
+        <div class="legend">
+          <span class="pill p-pending">Pendente</span>
+          <span class="pill p-running">Rodando</span>
+          <span class="pill p-success">Lançado</span>
         </div>
       </div>
-    </div>
-
-    <!-- Main Grid View -->
-    <div class="table-card">
-      <div class="table-header-bar">
-        <div class="table-title">
-          <span>Registros a Processar</span>
-          <span class="badge" id="rowCounterBadge">0 linhas</span>
-        </div>
-        <div class="table-actions">
-          <span class="legend-item"><span class="badge badge-pending">Pendente</span></span>
-          <span class="legend-item"><span class="badge badge-running">Processando</span></span>
-          <span class="legend-item"><span class="badge badge-success">Concluído</span></span>
-          <span class="legend-item"><span class="badge badge-error">Erro</span></span>
-        </div>
-      </div>
-
-      <div class="table-wrapper">
-        <table class="data-table" id="dataTable">
-          <thead>
-            <tr>
-              <th style="width: 40px">#</th>
-              <th style="width: 120px">Status</th>
-              <th style="width: 140px">Nº Lançamento</th>
-              <th>Unidade</th>
-              <th>Fornecedor</th>
-              <th>Evento</th>
-              <th>Série</th>
-              <th>Nº Compra</th>
-              <th>Modelo</th>
-              <th>Valor</th>
-              <th>Emissão</th>
-              <th>Entrada</th>
-              <th>Vencimento</th>
-              <th>Pagamento</th>
-              <th>Competência</th>
-              <th>Vlr Parcela</th>
-              <th>Histórico</th>
-              <th style="width: 60px">Ações</th>
-            </tr>
-          </thead>
-          <tbody id="tableBody">
-            <tr class="empty-row">
-              <td colspan="18">
-                <div class="empty-state">
-                  <div class="empty-state-icon">📊</div>
-                  <h3>Nenhum dado importado</h3>
-                  <p>Copie as células do Excel e aperte <strong>Ctrl + V</strong> em qualquer lugar, ou clique em "Carregar Planilha TARGET".</p>
-                </div>
-              </td>
-            </tr>
+      <div class="tablewrap">
+        <table>
+          <thead><tr>
+            <th>#</th><th>Status</th><th>Lançamento</th><th>Unid.</th><th>Fornecedor</th><th>Evento</th>
+            <th>Série</th><th>Nº Compra</th><th>Mod.</th><th>Valor</th><th>Emissão</th><th>Entrada</th>
+            <th>Vecto</th><th>Pgto</th><th>Comp.</th><th>Vlr Parc.</th><th>Histórico</th>
+          </tr></thead>
+          <tbody id="tbody">
+            <tr><td colspan="17"><div class="empty">Carregando dados da planilha…</div></td></tr>
           </tbody>
         </table>
       </div>
-    </div>
+    </section>
 
-    <!-- Live Execution Logs -->
-    <div class="log-card">
-      <div class="log-header">
-        <div class="log-title">
-          <span class="terminal-icon">⌨</span> Terminal de Execução SSW
-        </div>
-        <button class="btn-clear-log" id="btnClearLog" type="button">Limpar Log</button>
+    <section class="card term-card">
+      <div class="tablebar">
+        <h2><span class="cursor">▮</span> Terminal da automação</h2>
+        <button class="btn btn-small" id="btnClearLog" type="button">Limpar</button>
       </div>
-      <div class="terminal-body" id="terminalLog">
-        <div class="log-entry system">[SISTEMA] Dashboard de automação iniciado com sucesso. Aguardando dados para processamento.</div>
-        <div class="log-entry info">[CONFIG] Sequência de campos configurada para a Tela 475 do SSW (Parte 1 e Parte 2).</div>
-      </div>
-    </div>
+      <div class="terminal" id="terminal"></div>
+    </section>
+
+    <footer class="foot">TARGET SSW 475 · v2 · interface + robô unificados · <span id="footStatus">—</span></footer>
   </div>
-
   <script src="app.js"></script>
 </body>
 </html>

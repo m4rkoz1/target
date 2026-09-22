@@ -3,3 +3,9 @@ Linha 2 | Compra 10426197 | Lancamento: FSP236458 | Valor: R$ 13,20 | Evento: 70
 Linha 3 | Compra 10426192 | Lancamento: FSP236459 | Valor: R$ 65,36 | Evento: 7022
 Linha 4 | Compra 10426189 | Lancamento: FSP236460 | Valor: R$ 30,80 | Evento: 7022
 Linha 5 | Compra 10426184 | Lancamento: FSP236461 | Valor: R$ 13,20 | Evento: 7022
+Linha 1 | Compra 2266661 | Lancamento: CONFIRMADO | Valor: R$ 0,33 | Evento: 7564
+Linha 1 | Compra 321101 | Lancamento: CONFIRMADO | Valor: R$ 0,07 | Evento: 7564
+Linha 1 | Compra 236158 | Lancamento: CONFIRMADO | Valor: R$ 0,33 | Evento: 7564
+Linha 2 | Compra 6651251 | Lancamento: CONFIRMADO | Valor: R$ 0,15 | Evento: 7564
+Linha 3 | Compra 261450 | Lancamento: CONFIRMADO | Valor: R$ 0,07 | Evento: 7564
+Linha 1 | Compra 10461787 | Lancamento: CONFIRMADO | Valor: R$ 239,40 | Evento: 7022
