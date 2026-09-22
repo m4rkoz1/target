@@ -411,6 +411,85 @@ def em_tela_login():
             continue
     return False
 
+def _tratar_dialog(d):
+    """Dialogos nativos do SSW: prompt recebe '2' (confirmacao de final
+    de semana/data), demais (alert/confirm) sao aceitos."""
+    try:
+        if getattr(d, "type", "") == "prompt":
+            log("     [DIALOGO] prompt do SSW (confirmacao). Digitando '2'...")
+            d.accept("2")
+        else:
+            d.accept()
+    except Exception:
+        pass
+
+def _confirmar_final_semana(page):
+    """Se houver janela/aviso de data em final de semana, digita 2 p/ confirmar.
+    Retorna True se tratou algo."""
+    try:
+        for fr in _all_frames(page):
+            try:
+                achou = fr.evaluate("""() => {
+                    const t = document.body ? document.body.innerText : '';
+                    return /final de semana|s.bado|domingo/i.test(t);
+                }""")
+            except Exception:
+                continue
+            if not achou:
+                continue
+            # 1) input visivel no aviso/modal -> digita 2 + Enter
+            try:
+                handled = fr.evaluate("""() => {
+                    const alvos = [];
+                    const em = document.getElementById('errormsg');
+                    const raiz = em ? [em, document] : [document];
+                    for (const r of raiz) {
+                        r.querySelectorAll('input').forEach(el => {
+                            const rc = el.getBoundingClientRect ? el.getBoundingClientRect() : {width:0,height:0};
+                            if ((rc.width || rc.height || el.offsetParent) && !el.readOnly && !el.disabled) alvos.push(el);
+                        });
+                    }
+                    if (!alvos.length) return 'sem-input';
+                    const el = alvos[0];
+                    el.focus(); el.value = '2';
+                    ['input','change'].forEach(t => el.dispatchEvent(new Event(t, {bubbles:true})));
+                    return 'preenchido';
+                }""")
+            except Exception:
+                handled = ""
+            if handled == "preenchido":
+                try:
+                    pg = fr.page
+                    pg.bring_to_front()
+                    pg.keyboard.press("Enter")
+                except Exception:
+                    pass
+                return True
+            # 2) botao/link com texto "2" -> clica
+            try:
+                clicou = fr.evaluate("""() => {
+                    const els = Array.from(document.querySelectorAll('#errormsg a, #errormsg button, a, button'));
+                    const btn = els.find(e => (e.innerText||'').trim() === '2');
+                    if (btn) { btn.click(); return true; }
+                    return false;
+                }""")
+                if clicou:
+                    return True
+            except Exception:
+                pass
+            # 3) fallback: tecla 2 na pagina do aviso
+            try:
+                fr.page.bring_to_front()
+                fr.page.keyboard.press("2")
+                time.sleep(0.3)
+                fr.page.keyboard.press("Enter")
+                return True
+            except Exception:
+                return False
+    except Exception:
+        pass
+    return False
+
 def fechar_outras_paginas(manter_pg):
     """Fecha TODAS as outras janelas, mantendo so a atual (janela unica)."""
     try:
@@ -892,9 +971,9 @@ def executar_automacao():
         _PAGE_MAIN = page
 
         # Trata dialogs nativos (alert/confirm/prompt) na principal e em popups futuros
-        page.on("dialog", lambda d: d.accept())
+        page.on("dialog", _tratar_dialog)
         try:
-            context.on("page", lambda pg: pg.on("dialog", lambda d: d.accept()))
+            context.on("page", lambda pg: pg.on("dialog", _tratar_dialog))
         except Exception:
             pass
 
@@ -1235,6 +1314,13 @@ def executar_automacao():
 
                     if aviso_tratado:
                         log(f"     [AVISO SSW] Confirmado: '{aviso_tratado}'")
+
+                    # Janela de data em final de semana -> digita 2 p/ confirmar
+                    try:
+                        if _confirmar_final_semana(page):
+                            log("     [AVISO SSW] Final de semana confirmado com '2'. Aguardando gravacao...")
+                    except Exception:
+                        pass
 
                 if not num_lanc:
                     num_lanc = "CONFIRMADO"
