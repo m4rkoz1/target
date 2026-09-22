@@ -167,6 +167,19 @@ async function stop() {
   refreshStatus();
 }
 
+async function limparConcluidos() {
+  const n = Object.keys(state.concluidos).length;
+  if (!n) return alert("Nada marcado como concluído.");
+  if (!confirm(`Liberar ${n} concluído(s) para refazer? (apaga o registro de lançamentos)`)) return;
+  try {
+    const j = await api("/api/limpar_concluidos", { method: "POST" });
+    state.concluidos = {};
+    state.lastCompra = null;
+    paintRows(); updateStats(); refreshStatus();
+    tlog(`[WEB] ${j.removidos} concluído(s) liberados. Pode iniciar de novo.`, "web");
+  } catch (e) { tlog("[WEB] " + e.message, "err"); alert(e.message); }
+}
+
 /* ---------- colagem do Excel ---------- */
 function contarColagem() {
   const v = $("pasteArea").value || "";
@@ -212,6 +225,7 @@ document.addEventListener("DOMContentLoaded", () => {
   $("btnStop").onclick = stop;
   $("btnStop2").onclick = stop;
   $("btnExport").onclick = exportCSV;
+  $("btnLimparConc").onclick = limparConcluidos;
   $("btnClearLog").onclick = () => { $("terminal").innerHTML = ""; };
   $("pasteArea").addEventListener("input", contarColagem);
   $("btnUsarColagem").onclick = usarColagem;

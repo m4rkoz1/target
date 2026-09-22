@@ -196,6 +196,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return self.api_start()
         if self.path == "/api/stop":
             return self.api_stop()
+        if self.path == "/api/limpar_concluidos":
+            return self.api_limpar_concluidos()
         return _json(self, {"ok": False, "erro": "rota desconhecida"}, status=404)
 
     def _read_json(self):
@@ -354,6 +356,30 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         ESTADO.push_log(f"[WEB] Automacao iniciada (PID {proc.pid}, limite={limite or 'todos'}, modo={'visivel' if visivel else 'oculto'}).")
         threading.Thread(target=_drenar_saida, args=(proc,), daemon=True).start()
         return _json(self, {"ok": True, "pid": proc.pid})
+
+    def api_limpar_concluidos(self):
+        """Libera linhas para refazer: apaga tudo ou so as Nº Compra informadas."""
+        data = self._read_json()
+        alvos = data.get("ncompras") or []
+        alvos = {str(x).strip() for x in alvos if str(x).strip()}
+        arq = os.path.join(BASE_DIR, "lancamentos_realizados.txt")
+        try:
+            linhas = []
+            if os.path.exists(arq):
+                with open(arq, "r", encoding="utf-8", errors="ignore") as f:
+                    linhas = f.readlines()
+            if alvos:
+                mantidas = [l for l in linhas
+                            if not re.search(r"Compra\s+(\w+)", l) or re.search(r"Compra\s+(\w+)", l).group(1) not in alvos]
+                removidas = len(linhas) - len(mantidas)
+            else:
+                mantidas, removidas = [], len(linhas)
+            with open(arq, "w", encoding="utf-8") as f:
+                f.writelines(mantidas)
+        except Exception as e:
+            return _json(self, {"ok": False, "erro": f"Falha ao limpar: {e}"}, status=500)
+        ESTADO.push_log(f"[WEB] Concluidos limpos ({removidas} registro(s) liberados p/ refazer).")
+        return _json(self, {"ok": True, "removidos": removidas, "restantes": len(mantidas)})
 
     def api_stop(self):
         with ESTADO.lock:
