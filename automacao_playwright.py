@@ -424,52 +424,56 @@ def _tratar_dialog(d):
         pass
 
 def _confirmar_final_semana(page):
-    """Se houver janela/aviso de data em final de semana, digita 2 p/ confirmar.
-    Retorna True se tratou algo."""
+    """Aviso 'Data ... nao e dia util. 1. Alterar 2. Manter 3. Corrigir'
+    (ou final de semana/sabado/domingo): digita 2 p/ MANTER a data.
+    Atua SOMENTE dentro do #errormsg. Retorna True se tratou algo."""
     try:
         for fr in _all_frames(page):
             try:
-                achou = fr.evaluate("""() => {
-                    const t = document.body ? document.body.innerText : '';
-                    return /final de semana|s.bado|domingo/i.test(t);
-                }""")
-            except Exception:
-                continue
-            if not achou:
-                continue
-            # 1) input visivel no aviso/modal -> digita 2 + Enter
-            try:
-                handled = fr.evaluate("""() => {
-                    const alvos = [];
+                estado = fr.evaluate("""() => {
                     const em = document.getElementById('errormsg');
-                    const raiz = em ? [em, document] : [document];
-                    for (const r of raiz) {
-                        r.querySelectorAll('input').forEach(el => {
-                            const rc = el.getBoundingClientRect ? el.getBoundingClientRect() : {width:0,height:0};
-                            if ((rc.width || rc.height || el.offsetParent) && !el.readOnly && !el.disabled) alvos.push(el);
-                        });
-                    }
-                    if (!alvos.length) return 'sem-input';
-                    const el = alvos[0];
-                    el.focus(); el.value = '2';
-                    ['input','change'].forEach(t => el.dispatchEvent(new Event(t, {bubbles:true})));
-                    return 'preenchido';
+                    if (!em || em.style.visibility === 'hidden' || !em.innerText.trim()) return null;
+                    const t = em.innerText;
+                    if (!/dia\\s*u\\S*til|final de semana|sabado|domingo|manter data/i.test(t)) return null;
+                    const inputs = Array.from(em.querySelectorAll('input')).map(el => {
+                        const r = el.getBoundingClientRect ? el.getBoundingClientRect() : {width:0,height:0};
+                        return {id: el.id || '', tipo: el.type || '', vis: !!(r.width || r.height || el.offsetParent), ro: !!(el.readOnly || el.disabled)};
+                    });
+                    return {html: em.innerHTML.slice(0, 400), inputs};
                 }""")
             except Exception:
-                handled = ""
-            if handled == "preenchido":
+                continue
+            if not estado:
+                continue
+            log(f"     [AVISO SSW] Janela dia-util/fds: inputs no aviso={estado.get('inputs')}")
+            # 1) input dentro do proprio aviso -> digita 2 + Enter
+            edit = [i for i in (estado.get("inputs") or []) if i.get("vis") and not i.get("ro")]
+            if edit:
+                alvo = edit[0]
                 try:
-                    pg = fr.page
-                    pg.bring_to_front()
-                    pg.keyboard.press("Enter")
+                    ok = fr.evaluate("""(fid) => {
+                        const em = document.getElementById('errormsg');
+                        const el = (fid && em.querySelector('[id="' + fid + '"]')) || em.querySelector('input');
+                        if (!el) return false;
+                        el.focus(); el.value = '2';
+                        ['input','change'].forEach(t => el.dispatchEvent(new Event(t, {bubbles:true})));
+                        return true;
+                    }""", alvo.get("id"))
                 except Exception:
-                    pass
-                return True
-            # 2) botao/link com texto "2" -> clica
+                    ok = False
+                if ok:
+                    try:
+                        fr.page.bring_to_front()
+                        fr.page.keyboard.press("Enter")
+                    except Exception:
+                        pass
+                    return True
+            # 2) botao/link "2" dentro do aviso -> clica
             try:
                 clicou = fr.evaluate("""() => {
-                    const els = Array.from(document.querySelectorAll('#errormsg a, #errormsg button, a, button'));
-                    const btn = els.find(e => (e.innerText||'').trim() === '2');
+                    const em = document.getElementById('errormsg');
+                    if (!em) return false;
+                    const btn = Array.from(em.querySelectorAll('a, button')).find(e => (e.innerText||'').trim() === '2');
                     if (btn) { btn.click(); return true; }
                     return false;
                 }""")
@@ -477,7 +481,7 @@ def _confirmar_final_semana(page):
                     return True
             except Exception:
                 pass
-            # 3) fallback: tecla 2 na pagina do aviso
+            # 3) fallback: tecla 2 + Enter com foco no aviso
             try:
                 fr.page.bring_to_front()
                 fr.page.keyboard.press("2")

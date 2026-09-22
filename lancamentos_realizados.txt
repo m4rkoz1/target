@@ -9,3 +9,4 @@ Linha 1 | Compra 236158 | Lancamento: CONFIRMADO | Valor: R$ 0,33 | Evento: 7564
 Linha 2 | Compra 6651251 | Lancamento: CONFIRMADO | Valor: R$ 0,15 | Evento: 7564
 Linha 3 | Compra 261450 | Lancamento: CONFIRMADO | Valor: R$ 0,07 | Evento: 7564
 Linha 1 | Compra 10461787 | Lancamento: CONFIRMADO | Valor: R$ 239,40 | Evento: 7022
+Linha 1 | Compra 10452897 | Lancamento: CONFIRMADO | Valor: R$ 13,20 | Evento: 7022
